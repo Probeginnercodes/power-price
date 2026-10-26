@@ -1,22 +1,22 @@
 # Power Forecast Lab
 
-DE-LU day-ahead electricity-price forecasting and constrained battery valuation: a reduced Project 5 research application with a public portfolio demo.
+I’m using this project to explore electricity-price forecasting in the Germany–Luxembourg (DE-LU) market and how those forecasts affect battery charging and discharging decisions. It brings together data collection, machine learning, optimisation and deployment.
 
 **Question:** How accurately and with what uncertainty can DE-LU day-ahead prices be forecast from information available before the auction, and how does forecast quality affect constrained battery value?
 
-**Success test:** On a predeclared untouched evaluation period with verified input vintages, LightGBM must beat LEAR on mean pinball loss, meet the declared interval-calibration target, and report point accuracy against naive plus battery value under matched costs and constraints.
+**Success test:** I’ll consider the forecasting study successful when LightGBM beats LEAR on mean pinball loss and meets the declared interval-calibration target on an untouched evaluation period with verified inputs. I’ll also compare point forecasts against yesterday’s prices and battery value under the same costs and constraints.
 
-**Research status:** Exploratory. Original historical forecast vintages are unverified, the inspected development period is not an untouched holdout, and the predictive success test has not been met. The question and success test were consolidated into this README after data inspection began; they were not recorded here on day one.
+**Current status:** The app is running on AWS, but the historical results are still exploratory. I haven’t verified the original publication times of all forecast inputs, and I’ve already inspected the development period. I also wrote the question and success test into this README after starting work with the data, so I’m not treating the completed experiment as preregistered research.
 
 ## Public demo
 
 [Open the AWS-hosted dashboard](https://power-forecast-lab-api.duckdns.org/) · [Backend health](https://power-forecast-lab-api.duckdns.org/health) · [Source repository](https://github.com/Probeginnercodes/power-price)
 
-The owner has verified the public HTTPS health endpoint and local Docker experiment/download flow. A complete public-browser experiment and the GitHub Pages cross-origin flow still require final verification; no uptime guarantee is claimed. The intended frontend URL is [probeginnercodes.github.io/power-price](https://probeginnercodes.github.io/power-price/), pending Pages publication.
+I’ve checked the public HTTPS health endpoint and run experiments and CSV downloads locally through Docker. My next deployment check is the complete experiment flow through GitHub Pages. The frontend address is [probeginnercodes.github.io/power-price](https://probeginnercodes.github.io/power-price/); publication and cross-origin testing are still pending in this README.
 
-To explore the demo: inspect the saved historical example, or choose one evaluation day and run an experiment. Historical runs require acknowledgement of the vintage limitation. Inspect forecast intervals, model metrics, dispatch, cost sensitivities and CSV downloads. Synthetic demonstration results are visibly labelled and are not market evidence.
+To try it, open the saved historical example or select one evaluation day and click **Run experiment**. The dashboard shows forecasts, uncertainty intervals, model scores, battery schedules and cost sensitivities. You can also download the results. Synthetic runs are labelled separately; they are there to test the software, not demonstrate market performance.
 
-The public demo uses anonymous session-isolated jobs, one worker, 1–3 evaluation days, supported 90/364-day training windows, submission quotas and a 180-second timeout. Private results expire after 24 hours: download them before then. Availability depends on the EC2 instance and remaining demo capacity. No ENTSO-E token is accepted from visitors and no trades are placed.
+I’ve kept the public demo small: one worker, 1–3 evaluation days per run, 90/364-day training windows, submission limits and a 180-second timeout. Jobs are separated by anonymous browser sessions. Results expire after 24 hours, so download anything you want to keep. The server needs to be running for experiments to work. Visitors don’t need an ENTSO-E token, and the app doesn’t place trades.
 
 ## Architecture
 
@@ -36,13 +36,13 @@ flowchart LR
     end
 ```
 
-The browser loads the frontend from Pages and calls the separate HTTPS backend. FastAPI validates and queues requests; the worker performs training outside HTTP handlers. SQLite and output directories use persistent Docker volumes. Job results are scoped to anonymous bearer sessions, with only the deliberately selected historical example shared publicly. This is a single-host portfolio design: volumes are not independent backups, and server failure interrupts live experiments.
+I separated the interface from the model runs so the browser doesn’t have to wait on one long training request. FastAPI validates a request and puts it in a SQLite queue. A separate worker runs the analysis and saves the results. Both use a persistent Docker volume. Each anonymous session can access its own jobs, while the selected historical example is shared. Everything runs on one EC2 instance, so an instance failure interrupts experiments; the volume isn’t an independent backup.
 
-## Reproduce from a fresh clone
+## Run it locally
 
-### Docker: synthetic experiment, no API key or private dataset required
+### With Docker
 
-Prerequisites: Git and Docker Engine/Desktop with Compose and Linux-container support.
+You’ll need Git and Docker Engine/Desktop with Compose and Linux containers. The synthetic demo works without an API key or historical dataset.
 
 ```bash
 git clone https://github.com/Probeginnercodes/power-price.git
@@ -52,9 +52,9 @@ docker compose up --build
 
 Open **http://127.0.0.1:8000/**, select **Synthetic demonstration**, choose **1 evaluation day**, and click **Run experiment**. Inspect the resulting metrics and download a CSV. Stop with Ctrl+C; use `docker compose down` to remove containers while retaining the named volume. Do not use `down -v` unless deliberately deleting hosted state.
 
-The repository excludes `.env`, private keys, raw downloads, generated results and `deployment/seed/`. Consequently, a fresh clone provides the synthetic path; reproducing historical results additionally requires the original archived inputs or a separately prepared curated seed. Fresh API downloads can contain revisions and are not guaranteed to reproduce the published historical table exactly. See [data preparation](DATA_PIPELINE.md), [model specification](MODEL_SPEC.md) and [deployment/seed instructions](DEPLOYMENT.md).
+I keep `.env`, private keys, raw downloads, generated results and `deployment/seed/` out of Git. A fresh clone can run the synthetic demo. To reproduce the historical study, you’ll also need the archived inputs or a separately prepared seed dataset. Downloading the same dates again may return revised values, so it may not give exactly the same scores. Details are in [data preparation](DATA_PIPELINE.md), [model specification](MODEL_SPEC.md) and [deployment instructions](DEPLOYMENT.md).
 
-### Native Python checks and local research interface
+### With Python
 
 With Python 3.11 installed, the following Windows PowerShell commands avoid activation-policy changes:
 
@@ -66,9 +66,9 @@ py -3.11 -m venv .venv
 .\.venv\Scripts\python.exe serve.py
 ```
 
-Open the address printed by `serve.py`. This local research interface is separate from the hosted API/worker interface. With Node.js on PATH, `python check_quality.py --with-js` adds frontend checks. GitHub Actions is configured to run quality checks; a workflow file alone is not evidence that remote CI has passed. The latest local verification recorded 99 Python tests and 22 JavaScript checks passing; these establish software behaviour, not forecasting validity.
+Open the address printed by `serve.py` for the local research interface. With Node.js on PATH, `python check_quality.py --with-js` also checks the frontend. The latest local check passed 99 Python tests and 22 JavaScript checks. I’ve added a GitHub Actions quality workflow too; its status is shown in the repository’s Actions tab. Passing these checks tells me the software behaves as expected, not that the forecasts are accurate.
 
-## One complete path: API response to battery revenue
+## How a forecast becomes a battery decision
 
 | Stage | What happens | Code / retained evidence |
 |---|---|---|
@@ -81,11 +81,11 @@ Open the address printed by `serve.py`. This local research interface is separat
 
 The fitted price transform is `z = asinh((price - location) / scale)`; inversion is `price_hat = location + scale * sinh(z_hat)`. Its inverted point prediction is not automatically a conditional mean. Monotone quantile rearrangement uses no test outcomes.
 
-A settlement illustration, **not a measured project result**: charge 1 MWh at EUR 50/MWh, then sell 0.9 MWh at EUR 120/MWh after 90% round-trip efficiency. Gross margin is `0.9 * 120 - 1 * 50 = EUR 58`. With EUR 2/MWh charged plus discharged and zero import fee, net operating value is `58 - 2 * (1 + 0.9) = EUR 54.20`. The optimiser also enforces power/capacity limits, exclusive charging/discharging and empty daily start/end states; this arithmetic alone is not the optimisation algorithm.
+For example, suppose the battery buys 1 MWh at EUR 50/MWh and sells 0.9 MWh at EUR 120/MWh after 90% round-trip efficiency. The gross margin is `0.9 * 120 - 1 * 50 = EUR 58`. At EUR 2/MWh charged plus discharged, with no extra import fee, that becomes `58 - 2 * (1 + 0.9) = EUR 54.20`. This is just an arithmetic example, not one of my measured results. The actual optimiser also handles power and capacity limits, prevents simultaneous charging/discharging and starts and ends each day empty.
 
-## Historical results: negative findings included
+## Results so far
 
-Development experiment `20261024T170430888686Z_empirical_b972e4`: **15–21 October 2026**, 168 forecast hours, trailing **364-calendar-day** training windows with explicit exclusions. These dates have already been inspected.
+The table below comes from my seven-day development run for **15–21 October 2026**: 168 forecast hours with a rolling **364-calendar-day** training window. Missing/DST exclusions reduce the usable training observations. The saved experiment ID is `20261024T170430888686Z_empirical_b972e4`. I’ve already inspected these dates, so they are development data rather than a final untouched test.
 
 | Model | MAE EUR/MWh | RMSE EUR/MWh | Mean pinball EUR/MWh | 80% coverage | Battery net EUR | Upper-bound capture |
 |---|---:|---:|---:|---:|---:|---:|
@@ -94,11 +94,11 @@ Development experiment `20261024T170430888686Z_empirical_b972e4`: **15–21 Octo
 | Yesterday naive | **27.30** | **34.25** | — | — | 1,976.55 | 79.0% |
 | Perfect foresight | — | — | — | — | 2,502.18 | 100.0% |
 
-**Neither model beat naive on point accuracy over this week.** LightGBM beat LEAR on MAE but lost on pinball loss; both intervals undercovered. Better battery value than naive is a distinct finding, not a reversal of the accuracy result. A favourable one-day demonstration does not replace this seven-day table.
+**My models did not beat yesterday’s-price baseline on point accuracy over this week.** LightGBM had lower MAE than LEAR but worse pinball loss, and both models missed their 80% coverage target. Their battery schedules still captured more value than the naive policy. That is the main finding I want to investigate: lower price error and better battery decisions are not necessarily the same thing. I’m keeping the full-week result here rather than replacing it with a better-looking one-day run.
 
-The daily absolute-loss DM diagnostic was approximately 2.75 with raw p=0.033, based on only seven daily losses. It does not establish persuasive significance and does not test the primary pinball objective. No final significance claim is made. See [results note](RESULTS_NOTE.md).
+The daily absolute-loss DM statistic was about 2.75 with raw p=0.033, but that uses only seven daily losses. I don’t treat it as convincing evidence of a stable advantage. It also tests absolute loss, not the main pinball objective. More detail is in the [results note](RESULTS_NOTE.md).
 
-## Leakage checklist and limits
+## Leakage checks and data limits
 
 - [x] Request day-ahead forecasts rather than actual wind/solar generation as inputs.
 - [x] Preserve UTC identity and Berlin delivery labels; reject duplicate or timezone-naive timestamps.
@@ -112,7 +112,7 @@ The daily absolute-loss DM diagnostic was approximately 2.75 with raw p=0.033, b
 - [ ] Assign and freeze an untouched final evaluation period before accessing its outcomes.
 - [ ] Recover earlier unarchived human trials or keep their count explicitly unknown.
 
-The D-1 11:00 Berlin cutoff in the current audit is a research assumption, not a verified auction deadline. Receipt time and XML creation time do not automatically prove original publication. The strict command below intentionally fails closed for current historical data:
+I currently use D-1 11:00 Berlin as an assumed research cutoff; I still need to verify the actual auction deadline. Download and XML creation timestamps alone don’t prove when the original values were published. For that reason, the strict historical command below intentionally stops rather than marking the inputs as verified:
 
 ```bash
 python run_pipeline.py --mode empirical --acknowledge-unverified-vintages --require-verified-vintages
@@ -120,9 +120,9 @@ python run_pipeline.py --mode empirical --acknowledge-unverified-vintages --requ
 
 Source history covers 2025-10-08 to 2026-10-22 UTC exclusive. Preparation retained 9,095 complete hourly observations and excluded one incomplete hour at 2025-10-25 22:00 UTC involving solar/onshore-wind quarters. Native 15-minute averaging loses granular trading opportunities. Missing/DST exclusions affect representativeness, external-source cross-checks are incomplete, and crisis-regime performance is not established.
 
-## Prospective evaluation: planned, not completed
+## Next research step: prospective evaluation
 
-**No prospective collector or prospective holdout result is claimed here.** The existing [protocol](research_protocol.json) documents retrospective development; final holdout dates remain unassigned. The next study must be frozen before its outcomes are inspected:
+**I haven’t implemented a prospective collector or completed a prospective evaluation yet.** The current [protocol](research_protocol.json) records the development work retrospectively; I still need to assign the final holdout dates. My plan for the next study is:
 
 1. Verify the auction deadline and declare a forecast cutoff before auction results become available, not merely before the delivery day starts.
 2. Freeze features, models, training windows, quantiles, primary pinball comparison, calibration target, battery assumptions and the statistical testing family in a dated Git commit.
@@ -131,19 +131,19 @@ Source history covers 2025-10-08 to 2026-10-22 UTC exclusive. Preparation retain
 5. Obtain clearing-price outcomes after publication, then score the locked forecasts and actual-settled dispatch. Keep these results separate from the historical development sample.
 6. Report the predeclared metrics, uncertainty/dependence treatment and every subsequent variant. If outcomes influence tuning, designate that period as development and reserve another untouched evaluation.
 
-This process addresses the information-timing gap only when the collection, timing evidence and immutable prediction records actually exist. A longer sample or a written plan alone does not establish leakage-free inference. See [research rules](RESEARCH_RULES.md) and [decision log](RESEARCH_DECISIONS.md).
+The important part is saving what was available and what the model predicted before seeing the answer. Until those records exist, I’m keeping the historical results exploratory. I track the remaining requirements in [research rules](RESEARCH_RULES.md) and the [decision log](RESEARCH_DECISIONS.md).
 
 ## Trial accounting
 
-The archive inventory at **2026-10-24 19:08 UTC** contained 12 executions, zero recorded failures, two model-configuration signatures and five empirical test signatures with DM p-values. It is a dated snapshot, not the current lifetime total. **The lifetime number of human trials is unknown.** Code-only changes can conservatively split test signatures; identical repeated tests are deduplicated for adjustment.
+My archive snapshot at **2026-10-24 19:08 UTC** contained 12 executions, zero recorded failures, two model-configuration signatures and five empirical test signatures with DM p-values. Those are different counts, and they are only a snapshot. I can’t reconstruct the complete number of earlier experiments. Code-only changes can split test signatures, while identical repeated tests are deduplicated for adjustment.
 
-[research_audit.py](research_audit.py) inventories available successes/failures and exports diagnostic Holm adjustments. New pipeline runs refresh their ledger and new LEAR fits retain all alpha calibration candidates. These adjustments do not repair missing trial history, leakage, inspected dates or short samples; research inference remains disabled. Human hypotheses and selection decisions belong in [RESEARCH_DECISIONS.md](RESEARCH_DECISIONS.md) before each experiment.
+I use [research_audit.py](research_audit.py) to inventory saved successes and failures and calculate diagnostic Holm adjustments. New runs update the ledger, and LEAR fits save the calibration scores for every alpha candidate. The adjustment doesn’t fix missing trial history or leakage, so I’m not using it to claim final significance. I’ll record new hypotheses and selection decisions in [RESEARCH_DECISIONS.md](RESEARCH_DECISIONS.md) before running them.
 
 ## Battery costs and sensitivity
 
 Baseline: **1 MW / 4 MWh**, **90%** round-trip efficiency, daily empty start/end, **EUR 2/MWh charged plus discharged**, zero extra import fee. Linear physical/objective relationships plus binary mode variables form a MILP extension of the brief's LP, preventing simultaneous charging/discharging at negative prices.
 
-Period-total net EUR below changes one assumption at a time, reoptimising every policy using unchanged forecasts and recomputing perfect foresight under matching settings. These scenarios are descriptive, not a strategy-selection search.
+I tested the assumptions one at a time, keeping the price forecasts unchanged and reoptimising every policy, including perfect foresight, under matching settings. The table shows total net EUR over the same seven days. I use it to understand sensitivity, not to select whichever scenario happens to look most profitable.
 
 | Scenario | Perfect foresight | LEAR | LightGBM | Naive |
 |---|---:|---:|---:|---:|
@@ -160,12 +160,12 @@ Period-total net EUR below changes one assumption at a time, reoptimising every 
 
 These are simplified energy-arbitrage operating values, not all-in profit. Market impact, capital/financing and unconfigured grid/tax/capacity charges are omitted. Throughput cost is a wear proxy, not calibrated degradation. EUR/MWh costs are used rather than mechanically applying equity-style basis points to possibly negative electricity prices.
 
-## Development and learning map
+## What I’m working on next
 
-Development used AI assistance. The walkthrough and learning map support an independent rebuild, with emphasis on explaining assumptions, writing tests and debugging changes.
+I’m using this project to practise the full development cycle: collecting data, checking assumptions, building models, testing them and deploying an application that other people can use.
 
-For an independent rebuild: implement ingestion and schemas first; add timestamp/availability checks; build train-only transforms/features; fit and evaluate benchmarks; add optimisation; then build the API, queue, frontend, tests, containers and monitored deployment. At each stage, explain its contract and failure modes, reproduce a small example, and modify it without copying the existing implementation.
+My learning plan is to rebuild the pieces in order: ingestion and schemas; timestamp checks; transforms and features; models and evaluation; battery optimisation; then the API, queue, frontend, tests and deployment. For each piece, I want to explain the inputs and outputs, write a small example and debug changes independently.
 
 [Engineering guide](ENGINEERING_GUIDE.md) · [Scope/requirements](REQUIREMENTS_TRACEABILITY.md) · [Deployment guide](DEPLOYMENT.md) · [Model/data assumptions](MODEL_SPEC.md)
 
-The reduced scope excludes neural nets, nine-quantile ensembles/conformal wrappers, price simulation and multi-day storage. GitHub Pages publication is prepared in `.github/workflows/pages.yml`; enable Actions as the Pages source and run **Publish portfolio frontend** with `https://power-forecast-lab-api.duckdns.org`. Publishing the UI does not establish research validity.
+I’ve kept neural networks, nine-quantile ensembles, conformal wrappers, price simulation and multi-day storage outside the current scope. First I want to verify input timing and evaluate the existing models properly. The Pages workflow is in `.github/workflows/pages.yml`; it takes `https://power-forecast-lab-api.duckdns.org` as the backend origin.
