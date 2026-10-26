@@ -1,0 +1,73 @@
+{
+  "version": 1,
+  "recorded_utc": "2026-10-24T19:08:13.560496+00:00",
+  "status": "retrospectively documented development protocol; not day-one preregistration",
+  "question": "How accurately and with what uncertainty can DE-LU day-ahead prices be forecast from information available before the auction, and how does that accuracy affect constrained battery value?",
+  "success_test": "On a predeclared untouched evaluation period with verified input vintages, LightGBM must beat LEAR on mean pinball loss, achieve the declared interval-calibration target, and report point accuracy against naive plus battery value under matched costs and constraints.",
+  "development_period_already_inspected": {
+    "start_local": "2026-10-15",
+    "end_local_inclusive": "2026-10-21"
+  },
+  "final_holdout": {
+    "status": "NOT ASSIGNED; freeze dates before accessing outcomes",
+    "start_local": null,
+    "end_local_exclusive": null,
+    "minimum_evaluation_days": 60,
+    "untouched": false
+  },
+  "fixed_model_specification": {
+    "quantiles": [
+      0.1,
+      0.5,
+      0.9
+    ],
+    "training_days": 364,
+    "calibration_days": 28,
+    "evaluation_days": 7,
+    "lasso_alphas": [
+      0.01,
+      0.05,
+      0.2
+    ],
+    "lightgbm": {
+      "n_estimators": 100,
+      "learning_rate": 0.05,
+      "num_leaves": 15,
+      "min_child_samples": 30
+    },
+    "seed": 42,
+    "battery": {
+      "power_mw": 1.0,
+      "capacity_mwh": 4.0,
+      "round_trip_efficiency": 0.9,
+      "throughput_cost_eur_mwh": 2.0,
+      "import_fee_eur_mwh": 0.0
+    }
+  },
+  "primary_loss": "daily mean pinball loss across 0.1,0.5,0.9 quantiles; challenger versus LEAR",
+  "secondary_metrics": [
+    "MAE against yesterday naive",
+    "RMSE",
+    "80% coverage",
+    "quantile calibration",
+    "net battery value and capture"
+  ],
+  "calibration_target": {
+    "nominal": 0.8,
+    "descriptive_acceptance_band": [
+      0.75,
+      0.85
+    ],
+    "note": "Operational target, not a formal coverage guarantee; report sampling uncertainty and dependence."
+  },
+  "selection_policy": "Tune only within chronological training/calibration windows. Never select models, window lengths, cost assumptions or reported periods using final-holdout results.",
+  "trial_policy": "Record successful and failed executions; distinguish configuration variants, test signatures, inner alpha selection, and repeated runs. Earlier unarchived attempts remain unknown.",
+  "inference_policy": "Current DM tests compare daily absolute losses, not the primary pinball objective. Archived Holm adjustments are diagnostic only. A final primary pinball comparison must be predeclared with its dependence treatment and hypothesis family before opening the holdout.",
+  "publication_evidence_gate": "BLOCKED: current historical forecast vintages unverified. --require-verified-vintages fails closed.",
+  "sensitivity_policy": "Fixed one-factor-at-a-time battery grid; every policy reoptimised under each scenario; not used to choose a preferred trading strategy.",
+  "omitted_costs": [
+    "market impact",
+    "unconfigured grid/tax/capacity charges",
+    "capital/financing costs"
+  ]
+}

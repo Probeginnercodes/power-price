@@ -1,0 +1,41 @@
+services:
+  api:
+    build: .
+    image: power-forecast-lab:demo
+    init: true
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:8000:8000"
+    environment:
+      HOSTED_STATE_DIR: /state
+      ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-http://localhost:8000,http://127.0.0.1:8000}
+    volumes:
+      - demo-state:/state
+    mem_limit: 384m
+    cpus: 0.5
+    security_opt:
+      - no-new-privileges:true
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+      interval: 15s
+      timeout: 5s
+      retries: 4
+  worker:
+    image: power-forecast-lab:demo
+    build: .
+    init: true
+    restart: unless-stopped
+    command: ["python", "hosted_worker.py"]
+    environment:
+      HOSTED_STATE_DIR: /state
+      JOB_TIMEOUT_SECONDS: 180
+      OMP_NUM_THREADS: 1
+      OPENBLAS_NUM_THREADS: 1
+    volumes:
+      - demo-state:/state
+    mem_limit: 1200m
+    cpus: 1.5
+    security_opt:
+      - no-new-privileges:true
+volumes:
+  demo-state:

@@ -1,0 +1,33 @@
+# Run from the project root with both Compose files; no AWS resources are created here.
+services:
+  api:
+    command: ["python", "-m", "uvicorn", "hosted_api:create_app", "--factory", "--host", "0.0.0.0", "--port", "8000", "--proxy-headers", "--forwarded-allow-ips", "172.30.20.2"]
+    environment:
+      ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:?Set the exact GitHub Pages HTTPS origin}
+    networks:
+      - default
+      - proxy_net
+  proxy:
+    image: caddy:2
+    restart: unless-stopped
+    environment:
+      API_DOMAIN: ${API_DOMAIN:?Set an API DNS hostname pointing to this server}
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./deployment/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+    networks:
+      proxy_net:
+        ipv4_address: 172.30.20.2
+    mem_limit: 128m
+networks:
+  proxy_net:
+    ipam:
+      config:
+        - subnet: 172.30.20.0/24
+volumes:
+  caddy-data:
+  caddy-config:

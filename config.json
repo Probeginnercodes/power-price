@@ -1,0 +1,10 @@
+{
+  "quantiles": [0.1, 0.5, 0.9],
+  "training_days": 364,
+  "calibration_days": 28,
+  "evaluation_days": 7,
+  "lasso_alphas": [0.01, 0.05, 0.2],
+  "lightgbm": {"n_estimators": 100, "learning_rate": 0.05, "num_leaves": 15, "min_child_samples": 30},
+  "seed": 42,
+  "battery": {"power_mw": 1.0, "capacity_mwh": 4.0, "round_trip_efficiency": 0.9, "throughput_cost_eur_mwh": 2.0, "import_fee_eur_mwh": 0.0}
+}

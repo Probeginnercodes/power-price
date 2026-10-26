@@ -1,0 +1,21 @@
+# Allowlist the build context. API keys, raw archives, private jobs and Git are excluded.
+**
+!*.py
+!config.json
+!research_protocol.json
+!requirements.txt
+!requirements-hosted.txt
+!frontend/
+!frontend/**
+!deployment/
+!deployment/seed/
+!deployment/seed/**
+!Dockerfile
+!compose.yaml
+!deployment/Caddyfile
+!deployment/compose.aws.yaml
+!README.md
+test_*.py
+.env
+**/.env
+**/__pycache__/**

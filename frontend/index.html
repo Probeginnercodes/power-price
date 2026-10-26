@@ -1,0 +1,244 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Power Forecast Lab</title>
+    <link rel="stylesheet" href="./style.css" />
+  </head>
+  <body>
+    <aside>
+      <a class="brand" href="/">P<span>↗</span></a>
+      <div class="side-label">RESEARCH WORKSPACE</div>
+      <a class="nav active" href="#overview">Overview <span>01</span></a
+      ><a class="nav" href="#forecast">Forecasts <span>02</span></a
+      ><a class="nav" href="#battery">Battery value <span>03</span></a
+      ><a class="nav" href="#evidence">Evidence <span>04</span></a>
+      <div class="side-foot">
+        PROJECT 05<br /><b>DE–LU / DAY-AHEAD</b><small>Local development environment</small>
+      </div>
+    </aside>
+    <main>
+      <header>
+        <span>ENERGY SYSTEMS / PROBABILISTIC FORECASTING</span
+        ><span class="live"><i></i> LOCAL LAB</span>
+      </header>
+      <section id="overview" class="hero">
+        <div>
+          <div class="eyebrow">FROM FORECAST TO FLEXIBILITY</div>
+          <h1>Tomorrow’s prices.<br />Today’s decisions.</h1>
+          <p>
+            Compare a linear benchmark with quantile boosting.<br />Then put the forecasts to work
+            in a constrained battery.
+          </p>
+        </div>
+        <!-- Isometric system illustration is decorative; data charts retain undistorted axes. -->
+        <div class="hero-mark" aria-hidden="true">
+          <svg viewBox="0 0 260 190" focusable="false">
+            <path d="M14 140 L133 75 L248 137 L129 202 Z" fill="#cce0ff" opacity=".65" />
+            <path d="M45 72 L104 40 L163 72 L104 105 Z" fill="#66a3ff" />
+            <path d="M45 72 L104 105 L104 164 L45 131 Z" fill="#00509e" />
+            <path d="M104 105 L163 72 L163 131 L104 164 Z" fill="#003366" />
+            <path d="M90 45 L108 35 L126 45 L108 55 Z" fill="#cce0ff" />
+            <path d="M90 45 L108 55 L108 67 L90 57 Z" fill="#007acc" />
+            <path d="M108 55 L126 45 L126 57 L108 67 Z" fill="#00509e" />
+            <path d="M63 92 L83 103 L72 114 L88 124 L64 143 L74 123 L60 114 Z" fill="#cce0ff" />
+            <path d="M177 67 L204 52 L231 67 L204 82 Z" fill="#cce0ff" />
+            <path d="M177 67 L204 82 L204 120 L177 105 Z" fill="#007acc" />
+            <path d="M204 82 L231 67 L231 105 L204 120 Z" fill="#00509e" />
+            <path d="M159 147 L181 135 L203 147 L181 159 Z" fill="#66a3ff" />
+            <path d="M159 147 L181 159 L181 174 L159 162 Z" fill="#00509e" />
+            <path d="M181 159 L203 147 L203 162 L181 174 Z" fill="#003366" />
+            <text x="45" y="23" fill="#00509e" font-size="12" letter-spacing="3">
+              DE-LU ENERGY LAB
+            </text>
+          </svg>
+        </div>
+      </section>
+      <div class="notice" id="notice">
+        Choose a run or start a synthetic demo. Demonstration results are not market evidence.
+      </div>
+      <div class="research-status" id="research-status" role="status">
+        Research readiness: exploratory. Original forecast publication evidence and a final
+        untouched holdout remain unresolved.
+      </div>
+      <section class="controls panel">
+        <div>
+          <label for="mode">DATA MODE</label
+          ><select id="mode">
+            <option value="demo">Synthetic demonstration</option>
+            <option value="empirical">Historical · exploratory</option>
+          </select>
+        </div>
+        <div>
+          <label for="days">EVALUATION DAYS</label
+          ><input id="days" type="number" min="1" max="30" value="7" />
+        </div>
+        <div>
+          <label for="training">TRAINING WINDOW</label
+          ><select id="training">
+            <option value="364">364 calendar days</option>
+            <option value="90">90 days · fast demo</option>
+          </select>
+        </div>
+        <button id="run">Run experiment <span>↗</span></button
+        ><label class="ack" id="ackrow" hidden
+          ><input type="checkbox" id="ack" /> I acknowledge that historical forecast vintages are
+          unverified; results are exploratory.</label
+        >
+        <div class="job" id="job">Ready</div>
+      </section>
+      <div class="run-picker">
+        <label for="runs">SAVED EXPERIMENT</label
+        ><select id="runs">
+          <option value="">No completed experiment yet</option></select
+        ><span id="sample"></span>
+      </div>
+      <section class="kpis">
+        <article>
+          <label>LIGHTGBM PINBALL LOSS</label><strong id="pinball">—</strong
+          ><small>Mean across 10 / 50 / 90% quantiles</small>
+        </article>
+        <article id="coverage-card">
+          <label>80% INTERVAL COVERAGE</label><strong id="coverage">—</strong
+          ><small id="coverage-status" aria-live="polite"
+            >Nominal target 80% · not a guarantee</small
+          >
+        </article>
+        <article>
+          <label>BATTERY VALUE CAPTURED</label><strong id="capture">—</strong
+          ><small id="capture-period"
+            >Share of perfect-foresight total for the evaluated period</small
+          >
+        </article>
+        <article>
+          <label>POINT FORECAST MAE</label><strong id="mae">—</strong
+          ><small>Original price scale · EUR/MWh</small>
+        </article>
+      </section>
+      <section id="forecast" class="panel">
+        <div class="section-head">
+          <div>
+            <div class="eyebrow">01 / PRICE DISTRIBUTION</div>
+            <h2>A range, not a promise.</h2>
+          </div>
+          <div class="legend">
+            <span class="actual">Actual</span><span class="boost">LightGBM median</span
+            ><span class="linear">LEAR</span><span class="band">80% interval</span>
+          </div>
+        </div>
+        <div id="pricechart" class="chart empty">
+          Run an experiment to inspect its out-of-sample forecasts.
+        </div>
+        <div class="chart-foot">
+          Axis timestamps end in Z = UTC. Delivery-day selections use Europe/Berlin; a local day can
+          start on the previous UTC date.
+          <select id="day">
+            <option value="all">All delivery days</option>
+          </select>
+        </div>
+      </section>
+      <div class="two-col">
+        <section class="panel">
+          <div class="eyebrow">02 / FORECAST QUALITY</div>
+          <h2>Skill, measured.</h2>
+          <div id="metrics" class="table-wrap">No results yet.</div>
+          <div id="dm" class="callout">The DM comparison uses matched daily absolute losses.</div>
+          <div id="calibration" class="mini"></div>
+        </section>
+        <section id="battery" class="panel">
+          <div class="eyebrow">03 / STORAGE VALUE</div>
+          <h2>Forecasts into euros.</h2>
+          <p id="battery-period" class="period-label">Totals for the selected experiment</p>
+          <div id="bars" class="bars empty">Battery comparisons appear here.</div>
+          <div id="batterytable" class="table-wrap"></div>
+          <p id="battery-settings" class="muted">
+            Battery assumptions load with the selected experiment.
+          </p>
+        </section>
+      </div>
+      <section class="panel">
+        <div class="section-head">
+          <div>
+            <div class="eyebrow">04 / PHYSICAL DECISIONS</div>
+            <h2>Charge. Hold. Discharge.</h2>
+          </div>
+          <select id="dispatchmodel">
+            <option value="lightgbm">LightGBM policy</option>
+            <option value="lear">LEAR policy</option>
+            <option value="perfect_foresight">Perfect foresight</option>
+            <option value="naive">Naive</option>
+          </select>
+        </div>
+        <p id="dispatch-day-label" class="period-label">Choose a completed experiment.</p>
+        <div class="dispatch-legend">
+          <span class="charge">Charging (+)</span><span class="discharge">Discharging (−)</span>
+        </div>
+        <div id="dispatchchart" class="chart empty">Choose a completed run.</div>
+        <div class="chart-divider"></div>
+        <div id="energychart" class="chart empty">Stored energy appears here.</div>
+        <div class="chart-foot">
+          Separate axes: power in MW above; stored energy in MWh below. Z means UTC; the selected
+          delivery day uses Europe/Berlin.
+        </div>
+      </section>
+      <section id="sensitivity" class="panel">
+        <div class="eyebrow">05 / COST & PHYSICAL SENSITIVITY</div>
+        <h2>Test the assumptions behind the value.</h2>
+        <p class="sensitivity-note">
+          One assumption changes at a time. Every policy is reoptimised using the same frozen
+          forecasts and settled at actual prices. Perfect foresight uses the matching settings.
+          These comparisons do not select a winning strategy.
+        </p>
+        <div id="sensitivity-table" class="table-wrap sensitivity-wrap">
+          Sensitivity results load with the selected experiment when available.
+        </div>
+        <p class="sensitivity-note">
+          Costs are in EUR/MWh; capacity in MWh; efficiency is a fraction. Values exclude market
+          impact, capital costs and unconfigured grid/tax charges.
+        </p>
+      </section>
+      <section id="evidence" class="panel">
+        <div class="eyebrow">06 / REPRODUCIBILITY</div>
+        <h2>Know what the result means.</h2>
+        <h3>Trial accounting</h3>
+        <div id="trial-accounting" class="research-status">
+          Archive inventory is generated by research_audit.py; earlier unarchived research trials
+          remain unknown.
+        </div>
+        <div class="downloads">
+          <a href="/api/research/download?file=trial_ledger.csv" download="trial_ledger.csv"
+            >Download trial ledger</a
+          ><a href="/api/research/download?file=trial_summary.json" download="trial_summary.json"
+            >Download trial summary</a
+          >
+        </div>
+        <div class="evidence-grid">
+          <div>
+            <h3>Data available locally</h3>
+            <div id="datasets"></div>
+          </div>
+          <div>
+            <h3>Assumptions & limitations</h3>
+            <ul id="assumptions">
+              <li>No forecasts or battery results have been generated yet.</li>
+            </ul>
+          </div>
+        </div>
+        <div id="downloads" class="downloads"></div>
+        <details>
+          <summary>Experiment log</summary>
+          <pre id="log">No active job.</pre>
+        </details>
+      </section>
+      <footer>
+        POWER FORECAST LAB
+        <span>Research prototype · No trades are placed</span>
+      </footer>
+    </main>
+    <script src="./config.js"></script>
+    <script src="./api_client.js"></script>
+    <script src="./ui_helpers.js"></script>
+    <script src="./app.js"></script>
+  </body>
+</html>

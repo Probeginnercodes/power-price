@@ -1,0 +1,24 @@
+.venv/
+.env
+__pycache__/
+data/
+
+.ruff_cache/
+node_modules/
+
+# Hosted build outputs
+pages-dist/
+deployment/seed/
+
+# Never publish credentials or SSH material.
+.env.*
+!.env.example
+*.pem
+*.key
+*.ppk
+*.p12
+*.pfx
+*.sqlite3
+*.sqlite3-*
+*.log
+.pytest_cache/

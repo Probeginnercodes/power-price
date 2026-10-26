@@ -1,0 +1,38 @@
+name: Publish portfolio frontend
+on:
+  workflow_dispatch:
+    inputs:
+      backend_origin:
+        description: 'Live HTTPS API origin, e.g. https://api.your-domain.example'
+        required: true
+        default: 'https://power-forecast-lab-api.duckdns.org'
+        type: string
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+concurrency:
+  group: portfolio-pages
+  cancel-in-progress: true
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Build static frontend
+        env:
+          BACKEND_ORIGIN: ${{ inputs.backend_origin }}
+        run: python build_pages.py --api-url "$BACKEND_ORIGIN"
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: pages-dist
+      - name: Publish frontend
+        id: deployment
+        uses: actions/deploy-pages@v4

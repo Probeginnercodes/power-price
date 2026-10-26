@@ -1,0 +1,14 @@
+{
+  "name": "power-forecast-lab-ui",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Development checks for the local research dashboard",
+  "scripts": {
+    "test": "node test_frontend_ui.js && node test_dashboard_render.js && node --check frontend/app.js && node --check frontend/ui_helpers.js && node test_hosted_client.js && node --check frontend/api_client.js",
+    "format": "prettier --write frontend test_frontend_ui.js test_dashboard_render.js test_hosted_client.js",
+    "format:check": "prettier --check frontend test_frontend_ui.js test_dashboard_render.js test_hosted_client.js"
+  },
+  "devDependencies": {
+    "prettier": "3.6.2"
+  }
+}
